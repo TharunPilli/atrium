@@ -1,81 +1,69 @@
 # Week 3 record
 
-Your name:
-Date:
+Your name: Tharun Pilli
+Date: 15 October 2026
 
-Fill this in as you work, rather than at the end. Where you are unsure, write
-that you are unsure and say why. That is worth more than a confident sentence you
-cannot support.
 
----
+ 1. The finding I chose
 
-## 1. The finding I chose
+- **File:** `src/handlers/directory.js`
+- **Line:** 8–13 (SQL construction and execution; the user input is read on line 19).
+- **What the tool said about it:** Semgrep reported `scan-rules.sql-built-by-joining-text` with blocking severity. It warned that building an SQL statement by joining text can be dangerous if any of that text comes from outside the application.
 
-State which of the three the tool reported.
+2. What an assistant told me
 
-- File:
-- Line:
-- What the tool said about it:
+- **Assistant used:** ChatGPT.
+- **Its explanation, in my own words:** The assistant explained that the directory search takes the user's search input and joins it directly into an SQL query. This may allow SQL injection because the input can change how the database interprets the query.
+- **One thing it asserted that I had not verified at that point:** I had not yet checked whether a specially crafted search input actually changed the results returned by the running application.
 
-## 2. What an assistant told me
-
-Say which assistant you asked, and what it said in a sentence or two.
-
-- Assistant used:
-- Its explanation, in your own words:
-- One thing it asserted that I had not verified at that point:
-
-## 3. What the code shows
-
-Answer all four. If you cannot answer one, say so.
+ 3. What the code shows
 
 **Where does the data come from?**
 
+The data comes from the `q` query parameter in the HTTP request. In `src/handlers/directory.js`, line 19, the application reads `req.query.q` and assigns it to `q` if it is a string.
+
 **What happens to it on the way?**
+
+The value of `q` is passed to `searchDirectory(db, q)`. Inside this function, the application concatenates `q` into the SQL query used to search display names and departments.
 
 **Where does it become dangerous?**
 
+The risk occurs in lines 10–11, where `q` is inserted directly into the SQL text. The query is then prepared and executed using `db.prepare(sql).all()` on line 13. Preparing the query after inserting the input does not separate that input from the SQL statement.
+
 **What stands in the way?**
 
-## 4. What the running application shows
+The code checks that `req.query.q` is a string, but this does not prevent SQL injection. I could not identify an effective parameterized query or other control that prevents the search input from changing the SQL statement in this function.
 
-Record both. A single result on its own proves nothing.
+4. What the running application shows
 
 **Ordinary case**
 
-- What I entered:
-- What came back:
+- **What I entered:** `Nolan`
+- **What came back:** One colleague, Alice Nolan, was displayed.
 
 **The case I was testing for**
 
-- What I entered:
-- What came back:
-- How this differs from the ordinary case:
+- **What I entered:** `' OR '1'='1`
+- **What came back:** Three colleagues were displayed: Alice Nolan, Bob Keane and Morgan Doyle.
+- **How this differs from the ordinary case:** The normal search returned one colleague, whereas the specially crafted input returned all three colleagues shown in the directory. This result is consistent with the input changing the SQL query's behaviour.
 
-## 5. My answer
+ 5. My answer
 
-Delete the two that do not apply.
 
-**Real** / **Not real** / **Not settled**
+**Why, in two or three sentences.**
 
-**Why, in two or three sentences.** Write for somebody who has not seen any of this.
+The finding is real because the code inserts user-controlled search input directly into the SQL query without using parameterized placeholders for that input. In my local test, searching for `Nolan` returned one colleague, while the test payload returned three colleagues. Together, the code and observed behaviour support the conclusion that the directory search is vulnerable to SQL injection.
 
-**What would change my mind.** If new information would alter this answer, say what.
+**What would change my mind.**
 
-**How far this answer reaches.** What you established applies to a particular page,
-a particular set of data and this version of the application. Say what you have
-shown, and be careful not to claim more.
+If further investigation showed that the observed results came from a different code path or that the running application was not executing the displayed query, I would reconsider the conclusion. A code change that safely parameterizes the search input, followed by testing the updated version, would also change the assessment of that version.
 
-## 6. Back to the assistant
+**How far this answer reaches.**
 
-The thing you noted in section 2, that you had not verified at the time.
+This conclusion applies to the directory search in the version of Atrium I inspected and tested locally, using the data available in that lab environment. I established that the normal search returned one colleague and the test input returned three, consistent with SQL injection. I have not established that every page or query in Atrium is vulnerable, or that the same issue exists in any other application.
 
-- Did I check it?
-- Was it right?
+ 6. Back to the assistant
 
----
+- **Did I check it?** Yes. I inspected `src/handlers/directory.js` and tested the normal and specially crafted search inputs against the local application.
+- **Was it right?** Yes. The direct concatenation in the source code and the difference between the observed search results support the assistant's initial explanation.
 
-## Optional, if you had time
-
-The other two findings matched the same rule. Why are they not the same situation?
-Two sentences.
