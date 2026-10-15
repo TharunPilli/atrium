@@ -1,6 +1,5 @@
 # Week 3 record
-
-Your name: Tharun Pilli
+Name: Tharun Pilli
 Date: 15 October 2026
 
 
