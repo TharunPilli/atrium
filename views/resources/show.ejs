@@ -1,3 +1,4 @@
+
 <%- include('../partials/head', { title: resource.title }) %>
 <%- include('../partials/nav', { active: 'resources', currentUser: currentUser }) %>
 <main id="main-content" class="page-shell reading-shell">
@@ -8,7 +9,7 @@
       <h1><%= resource.title %></h1>
     </header>
     <div class="document-layout">
-      <div class="document-body"><p><%- resource.description %></p></div>
+      <div class="document-body"><p><%= resource.description %></p></div>
       <dl class="document-meta">
         <div><dt>Kept by</dt><dd><%= resource.owner_name %></dd></div>
         <div><dt>Department</dt><dd><%= resource.category %></dd></div>
